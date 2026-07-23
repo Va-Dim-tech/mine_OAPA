@@ -1,48 +1,3 @@
-
-tp = nil
-mn = nil
-bt = nil
-is = nil
-ss = nil
-for tr in pairs(component.list("transposer")) do
-	for i=0, 5 do
-		a = component.invoke(tr, "getInventoryName", i)
-		if a == 'appliedenergistics2:interface' then
-			mn = component.proxy(tr)
-		end
-		if a == 'appliedenergistics2:inscriber' then
-			if i == 0 then
-				tp = component.proxy(tr)
-			elseif i == 1 then
-				bt = component.proxy(tr)
-			end
-		end
-	end
-end
-
-for i=0, 1 do
-	for j, k in pairs(mn.getAllStacks(i).getAll()) do
-		if k.name == 'appliedenergistics2:material' then -- todo add check for press
-			is = i
-		end
-	end
-	if is == nil then
-	ss = i 
-	end
-end
-
-error(tp.address .. " " .. mn.address .. " " .. bt.address .. " " .. is .. " " .. ss)
-function typ(nm, dm)
-	if nm == 'minecraft:air' then
-	return 17
-	end
-	for t1, t2 in pairs(items) do
-		if t1.name == nm and t1.damage == dm then
-			return t2
-		end
-	end
-	return 0
-end
 a = 'appliedenergistics2:material'
 b = 'damage'
 c = 'name'
@@ -74,6 +29,61 @@ rec = {
 {11, 9, 10, 15},
 {13, 9, 10, 16}
 }
+tp = nil
+mn = nil
+bt = nil
+is = nil
+ss = nil
+it = nil
+mi = nil
+function typ(nm, dm)
+	if nm == 'minecraft:air' then
+	return 17
+	end
+	for t1, t2 in pairs(items) do
+		if t1.name == nm and t1.damage == dm then
+			return t2
+		end
+	end
+	return 0
+end
+
+for tr in pairs(component.list("transposer")) do
+	for i=0, 5 do
+		a = component.invoke(tr, "getInventoryName", i)
+		if a == 'appliedenergistics2:interface' then
+			mn = component.proxy(tr)
+			it = i
+		end
+		if a == 'appliedenergistics2:inscriber' then
+			if i == 0 then
+				tp = component.proxy(tr)
+			elseif i == 1 then
+				bt = component.proxy(tr)
+			else
+				mi = i 
+			end
+		end
+	end
+end
+ss=1
+for i=0, 1 do
+	dat = mn.getAllStacks(i).getAll()
+	for j, k in pairs(dat) do
+		a = typ(k.name, k.damage)
+		if k.name == 'appliedenergistics2:material' and a >= 1 and a <= 4 then 
+			is = i
+			mn.transferItem(i, i, 64, j, #dat - (a - 1))
+		end
+	end
+	if not is then
+		ss = 0
+	end
+end
+
+error(tp.address .. " " .. mn.address .. " " .. bt.address .. " " .. is .. " " .. ss .. " " .. it .. " " .. mi)
+
+
 dat = tr.getAllStacks(inside).getAll()
 for i=1, #dat do
 	a = typ(dat[i].name, dat[i].damage)
