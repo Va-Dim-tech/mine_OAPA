@@ -84,21 +84,18 @@ end
 error(tp.address .. " " .. mn.address .. " " .. bt.address .. " " .. is .. " " .. ss .. " " .. it .. " " .. mi)
 
 
-dat = tr.getAllStacks(inside).getAll()
-for i=1, #dat do
-	a = typ(dat[i].name, dat[i].damage)
-	if a >= 1 and a <= 4 then
-		tr.transferItem(inside, inside, 64, i, #dat - (a - 1))
-	elseif a == 0 then 
-		tr.transferItem(inside, ouside, 64, i)
-	end
+
+
+function tru(sl)
+
+
 end
+
 dat = nil
 state = 1
 tecrec = 0
 pdat = nil
 c = false
-
 function st1()
 	dat = tr.getAllStacks(inside).getAll()
 	ms = {[17]=true}
