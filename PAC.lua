@@ -33,15 +33,17 @@ tp = nil -- транспосер верх
 mn = nil -- транспосер центр
 bt = nil -- транспосер низ
 is = nil -- сторона сундука глав
-ss = nil -- сторона нн глав сундука
+ss = nil -- сторона не глав сундука
 its = nil -- сторона интерфейса
 mi = nil -- сторона выхода пресса
+to = nil -- транспосер верх сундук
+bo = nil -- транспосер низ сундук
 function typ(it)
 	if it == nil or it.name == 'minecraft:air' then
-	return 17
+		return 17
 	end
 	for t1, t2 in pairs(items) do
-		if t1.name == it.name and t2.damage == it.damage then
+		if t1.name == it.name and t1.damage == it.damage then
 			return t2
 		end
 	end
@@ -51,22 +53,61 @@ end
 
 for tr in pairs(component.list("transposer")) do
 	for i=0, 5 do
-		a = component.invoke(tr, "getInventoryName", i)
+		t = component.proxy(tr)
+		a = t.getInventoryName(i)
 		if a == 'appliedenergistics2:interface' then
-			mn = component.proxy(tr)
+			mn = t
 			its = i
 		end
 		if a == 'appliedenergistics2:inscriber' then
 			if i == 0 then
-				tp = component.proxy(tr)
+				tp = t
 			elseif i == 1 then
-				bt = component.proxy(tr)
+				bt = t
 			else
 				mi = i 
 			end
 		end
+		a = t.getInventorySize(i)
+		if a and a > 0 then 
+			if tp == t then 
+				to = i
+			elseif bt == t then
+				bo = i
+			end
+		end
 	end
 end
+
+function tra(s1, t1, s2, t2, s3, i1, i2)
+    f=1
+	computer.beep(600, 1)
+    if s1 == s2 then
+        f=i1
+    else
+        if s2 == s3 then
+            f = i2
+        end
+		if f then 
+			t1.transferItem(s1, s2, 1, i1, f)
+		else
+			t1.transferItem(s1, s2, 1, i1)
+		end
+        
+    end
+	computer.beep(1000, 1)
+	computer.pullSignal(1)
+	
+    if s2 ~= s3 then
+		if i2 then 
+			t2.transferItem(s2, s3, 1, f, i2)
+		else
+			t2.transferItem(s2, s3, 1, f)
+		end
+    end
+
+end
+
 ss=1
 for i=0, 1 do
 	dat = mn.getAllStacks(i).getAll()
@@ -83,28 +124,21 @@ for i=0, 1 do
 		ss = 0
 	end
 end
-
-error(tp.address .. " " .. mn.address .. " " .. bt.address .. " " .. is .. " " .. ss .. " " .. it .. " " .. mi)
-
-
+tra(0, tp, to, mn, is, 1, nil)
+tra(1, bt, bo, mn, is, 1, nil)
 
 
-function tra(s1, t1, s2, t2, s3, i1, i2)
-    f=1
-    if s1 == s2 then
-        f=i1
-    else
-        if s2 == s3 then
-            f = i2
-        end
-        t1.transferItem(s1, s2, 1, i1, f)
-        
-    end
-    if s2 ~= s3 then
-        t2.transferItem(s2, s3, 1, f, i2)
-    end
 
+if not (tp and mn and bt and its and mi and ss ~= is) then 
+	error('no press ' .. mi .. " " .. is .. " " .. its .. " " .. ss)
 end
+
+
+
+
+
+
+
 
 prcd=0 -- кол-во в процессе
 tcprs = 17 --текущий пресс
@@ -120,11 +154,12 @@ function rec()
             if a == 0 then
                 mn.transferItem(is, its, 64, i)
             else 
-                mn[a] = (mn[a] or 0) + j.count
+                mn[a] = (mn[a] or 0) + j.size
                 if prms[a] ~= mn[a] then
                     chg = true
                 end
             end
+		end
     end
     for i, j in pairs(rec) do
         if ms[j[1]] and ms[j[2]] and ms[j[3]] then
@@ -152,7 +187,6 @@ function rec()
     end
     
 end
-
 
 
 
