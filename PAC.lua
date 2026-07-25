@@ -29,31 +29,32 @@ rec = {
 {11, 9, 10, 15},
 {13, 9, 10, 16}
 }
-tp = nil
-mn = nil
-bt = nil
-is = nil
-ss = nil
-it = nil
-mi = nil
-function typ(nm, dm)
-	if nm == 'minecraft:air' then
+tp = nil -- транспосер верх
+mn = nil -- транспосер центр
+bt = nil -- транспосер низ
+is = nil -- сторона сундука глав
+ss = nil -- сторона нн глав сундука
+its = nil -- сторона интерфейса
+mi = nil -- сторона выхода пресса
+function typ(it)
+	if it == nil or it.name == 'minecraft:air' then
 	return 17
 	end
 	for t1, t2 in pairs(items) do
-		if t1.name == nm and t1.damage == dm then
+		if t1.name == it.name and t2.damage == it.damage then
 			return t2
 		end
 	end
 	return 0
 end
 
+
 for tr in pairs(component.list("transposer")) do
 	for i=0, 5 do
 		a = component.invoke(tr, "getInventoryName", i)
 		if a == 'appliedenergistics2:interface' then
 			mn = component.proxy(tr)
-			it = i
+			its = i
 		end
 		if a == 'appliedenergistics2:inscriber' then
 			if i == 0 then
@@ -70,10 +71,12 @@ ss=1
 for i=0, 1 do
 	dat = mn.getAllStacks(i).getAll()
 	for j, k in pairs(dat) do
-		a = typ(k.name, k.damage)
-		if k.name == 'appliedenergistics2:material' and a >= 1 and a <= 4 then 
+		a = typ(k)
+		if a >= 1 and a <= 4 then 
 			is = i
 			mn.transferItem(i, i, 64, j, #dat - (a - 1))
+		elseif a == 0 then
+		    mn.transferItem(i, ita, 64, j, 1)
 		end
 	end
 	if not is then
@@ -86,10 +89,72 @@ error(tp.address .. " " .. mn.address .. " " .. bt.address .. " " .. is .. " " .
 
 
 
-function tru(sl)
-
+function tra(s1, t1, s2, t2, s3, i1, i2)
+    f=1
+    if s1 == s2 then
+        f=i1
+    else
+        if s2 == s3 then
+            f = i2
+        end
+        t1.transferItem(s1, s2, 1, i1, f)
+        
+    end
+    if s2 ~= s3 then
+        t2.transferItem(s2, s3, 1, f, i2)
+    end
 
 end
+
+prcd=0 -- кол-во в процессе
+tcprs = 17 --текущий пресс
+tecrec = 0 -- текущий рецепт
+prms = {} -- предыдущий состав предметов
+function rec()
+	dat = mn.getAllStacks(is).getAll()
+	ms = {[17]=64}
+	chg = false -- изменилось ли
+    for i, j in pairs(dat) do
+        a = typ(j)
+        if a ~= 17 then
+            if a == 0 then
+                mn.transferItem(is, its, 64, i)
+            else 
+                mn[a] = (mn[a] or 0) + j.count
+                if prms[a] ~= mn[a] then
+                    chg = true
+                end
+            end
+    end
+    for i, j in pairs(rec) do
+        if ms[j[1]] and ms[j[2]] and ms[j[3]] then
+            if tecrec == i or prcd == 0 then
+                if prcd == 0 then
+                    for i=1, 3 do
+                        if i == 1 then
+                            t = tp
+                            s = 0
+                        elseif i == 2 then
+                            t = bt
+                        elseif i == 3 then
+                            
+                        end
+                    end
+                    
+                end
+            end
+        end
+    end
+    if chg then
+        -- timet
+    else
+        
+    end
+    
+end
+
+
+
 
 dat = nil
 state = 1
@@ -146,7 +211,6 @@ function st1()
 		c = true
 	end
 end
-
 while true do
 computer.pullSignal(0)
 if state == 1 then 
