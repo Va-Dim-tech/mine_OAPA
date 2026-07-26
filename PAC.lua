@@ -123,19 +123,19 @@ end
 
 tra(0, tp, to, 1, mn, is, 1, nil)
 tra(1, bt, bo, 0, mn, is, 1, nil)
-mn.transferItem(mi, is, nil, 2)
+mn.transferItem(mi, is, nil, 1)
 --error(tp.address .. " " .. mn.address .. " " .. bt.address .. " " .. is .. " " .. ss .. " " .. its .. " " .. mi)
 
 if not (tp and mn and bt and its and mi and ss ~= is) then 
 	error('no press ' .. mi .. " " .. is .. " " .. its .. " " .. ss)
 end
-
+computer.beep(900, 0.1)
 
 prcd=-1 -- кол-во в процессе
 tcprs = 17 --текущий пресс
 tecrec = 0 -- текущий рецепт
 prms = {} -- предыдущий состав предметов
-function rec()
+function proc()
 	dat = mn.getAllStacks(is).getAll()
 	ms = {[17]=1} -- что:где
 	chg = false -- изменилось ли
@@ -145,37 +145,43 @@ function rec()
             if a == 0 then
                 mn.transferItem(is, its, 64, i)
 			elseif a >= 1 and a <= 4 then
-				mn.transferItem(is, is, 64, j, #dat - (a - 1))
-				mn[a] = #dat - (a - 1) 
+				if #dat - (a - 1) ~= i then
+					mn.transferItem(is, is, 64, i, #dat - (a - 1))
+				end
+				ms[a] = #dat - (a - 1) 
             else 
-                mn[a] = i
-                if (prms[a] == nil) ~= (mn[a] == nil) then
+				
+                ms[a] = i
+				
+                if (prms[a] == nil) ~= (ms[a] == nil) then
+					
                     chg = true
                 end
             end
 		end
     end
+	prms = ms
     for i, j in pairs(rec) do
         if ms[j[1]] and ms[j[2]] and ms[j[3]] then
             if tecrec == i or prcd == 0 then
                 if prcd == 0 then
-					a = typ(tp.getStackInSlot(0))
+					a = typ(tp.getStackInSlot(0, 1))
                     if a ~= 17 and a ~= j[1] then
 						tra(0, tp, to, 1, mn, is, 1, nil)
 					end
-					a = typ(bt.getStackInSlot(1))
+					a = typ(bt.getStackInSlot(1, 1))
 					if a ~= 17 and a ~= j[1] then
 						tra(1, bt, bo, 0, mn, is, 1, nil)
 					end
                 end
 				if j[1] ~= 17 then
-						tra(is, mn, 1, to, tp, 0, ms[j[1]], nil)
-				end
-				if j[3] ~= 17 then
 					tra(is, mn, 1, to, tp, 0, ms[j[1]], nil)
 				end
+				if j[3] ~= 17 then
+					tra(is, mn, 0, bo, bt, 1, ms[j[3]], nil)
+				end
 				if j[2] ~= 17 then
-						mn.transferItem(is, mi, 1, ms[j[2]], 1)
+					mn.transferItem(is, mi, 1, ms[j[2]], 1)
 				end
 				prcd = prcd + 1
 				tecrec = i
@@ -201,63 +207,5 @@ if prcd ~= 0 then
 		prcd = 0
 	end
 end
-	rec()
-
+	proc()
 end 
-
-
-while true do
-computer.pullSignal(0)
-if state == 1 then 
-	st1()
-elseif state == 2 then
-	a1 = true
-	a2 = true
-	a3 = true
-	r = 5
-	e = -1
-	e1 = -1
-	while e1 == e do
-		e = 0
-		dat = tr.getAllStacks(inside).getAll()
-		for i=1, #dat do
-			a = typ(dat[i].name, dat[i].damage)
-			if rec[tecrec][1] == a and a1 then
-				a1 = false
-				b = tr.getStackInSlot(0, 1)
-				if b ~= nil then
-					c = typ(b.name, b.damage)
-					if c ~= a then
-						if c ~= 0 and c <= 4 then
-							tr.transferItem(0, inside, 64, 1, #dat - (c - 1))
-						else
-							tr.transferItem(0, inside, 64, 1)
-						end
-					end
-				end
-				tr.transferItem(inside, 0, 1, i)
-				r = a
-			elseif rec[tecrec][2] == a and a2 then
-				a2 = false
-				tr.transferItem(inside, ffside, 1, i)
-			elseif rec[tecrec][3] == a and a3 then
-				a3 = false
-				tr.transferItem(inside, fbside, 1, i)
-			elseif rec[tecrec][4] == a then
-				e = e + tr.getSlotStackSize(inside, i)
-				s = i
-			end
-		end
-		if e1 == -1 then
-			e1 = e
-		end
-	end
-	tr.transferItem(inside, ouside, 1, s)
-	if r < 5 then 
-		tr.transferItem(0, inside, 1, 1, #dat - (r - 1))
-	else
-		r.transferItem(0, inside, 1, 1)
-	end
-	state = 1
-end
-end
