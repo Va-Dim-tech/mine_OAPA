@@ -42,9 +42,9 @@ function typ(it)
 	if it == nil or it.name == 'minecraft:air' then
 		return 17
 	end
-	for t1, t2 in pairs(items) do
-		if t1.name == it.name and t1.damage == it.damage then
-			return t2
+	for l1, l2 in pairs(items) do
+		if l1.name == it.name and l1.damage == it.damage then
+			return l2
 		end
 	end
 	return 0
@@ -79,31 +79,27 @@ for tr in pairs(component.list("transposer")) do
 	end
 end
 
-function tra(s1, t1, s2, t2, s3, i1, i2)
+function tra(s1, t1, s2, s3, t2, s4, i1, i2)
     f=1
-	computer.beep(600, 1)
     if s1 == s2 then
         f=i1
     else
-        if s2 == s3 then
+        if s3 == s4 then
             f = i2
         end
 		if f then 
 			t1.transferItem(s1, s2, 1, i1, f)
 		else
 			t1.transferItem(s1, s2, 1, i1)
-		end
-        
+		end 
     end
-	computer.beep(1000, 1)
-	computer.pullSignal(1)
-	
-    if s2 ~= s3 then
+    if s3 ~= s4 then
 		if i2 then 
-			t2.transferItem(s2, s3, 1, f, i2)
+			t2.transferItem(s3, s4, 1, f, i2)
 		else
-			t2.transferItem(s2, s3, 1, f)
+			t2.transferItem(s3, s4, 1, f)
 		end
+		
     end
 
 end
@@ -117,45 +113,43 @@ for i=0, 1 do
 			is = i
 			mn.transferItem(i, i, 64, j, #dat - (a - 1))
 		elseif a == 0 then
-		    mn.transferItem(i, ita, 64, j, 1)
+		    mn.transferItem(i, its, 64, j, 1)
 		end
 	end
 	if not is then
 		ss = 0
 	end
 end
-tra(0, tp, to, mn, is, 1, nil)
-tra(1, bt, bo, mn, is, 1, nil)
 
-
+tra(0, tp, to, 1, mn, is, 1, nil)
+tra(1, bt, bo, 0, mn, is, 1, nil)
+mn.transferItem(mi, is, nil, 2)
+--error(tp.address .. " " .. mn.address .. " " .. bt.address .. " " .. is .. " " .. ss .. " " .. its .. " " .. mi)
 
 if not (tp and mn and bt and its and mi and ss ~= is) then 
 	error('no press ' .. mi .. " " .. is .. " " .. its .. " " .. ss)
 end
 
 
-
-
-
-
-
-
-prcd=0 -- кол-во в процессе
+prcd=-1 -- кол-во в процессе
 tcprs = 17 --текущий пресс
 tecrec = 0 -- текущий рецепт
 prms = {} -- предыдущий состав предметов
 function rec()
 	dat = mn.getAllStacks(is).getAll()
-	ms = {[17]=64}
+	ms = {[17]=1} -- что:где
 	chg = false -- изменилось ли
     for i, j in pairs(dat) do
         a = typ(j)
         if a ~= 17 then
             if a == 0 then
                 mn.transferItem(is, its, 64, i)
+			elseif a >= 1 and a <= 4 then
+				mn.transferItem(is, is, 64, j, #dat - (a - 1))
+				mn[a] = #dat - (a - 1) 
             else 
-                mn[a] = (mn[a] or 0) + j.size
-                if prms[a] ~= mn[a] then
+                mn[a] = i
+                if (prms[a] == nil) ~= (mn[a] == nil) then
                     chg = true
                 end
             end
@@ -165,86 +159,53 @@ function rec()
         if ms[j[1]] and ms[j[2]] and ms[j[3]] then
             if tecrec == i or prcd == 0 then
                 if prcd == 0 then
-                    for i=1, 3 do
-                        if i == 1 then
-                            t = tp
-                            s = 0
-                        elseif i == 2 then
-                            t = bt
-                        elseif i == 3 then
-                            
-                        end
-                    end
-                    
+					a = typ(tp.getStackInSlot(0))
+                    if a ~= 17 and a ~= j[1] then
+						tra(0, tp, to, 1, mn, is, 1, nil)
+					end
+					a = typ(bt.getStackInSlot(1))
+					if a ~= 17 and a ~= j[1] then
+						tra(1, bt, bo, 0, mn, is, 1, nil)
+					end
                 end
+				if j[1] ~= 17 then
+						tra(is, mn, 1, to, tp, 0, ms[j[1]], nil)
+				end
+				if j[3] ~= 17 then
+					tra(is, mn, 1, to, tp, 0, ms[j[1]], nil)
+				end
+				if j[2] ~= 17 then
+						mn.transferItem(is, mi, 1, ms[j[2]], 1)
+				end
+				prcd = prcd + 1
+				tecrec = i
+				return
             end
         end
     end
-    if chg then
-        -- timet
-    else
-        
+    if not chg then
+        computer.pullSignal(1)
     end
     
 end
 
 
-
-dat = nil
-state = 1
-tecrec = 0
-pdat = nil
-c = false
-function st1()
-	dat = tr.getAllStacks(inside).getAll()
-	ms = {[17]=true}
-	b = false
-	it = false
-	for i=1, #dat do
-		a = typ(dat[i].name, dat[i].damage)
-		if a ~= 17 then
-			if a == 0 or (c and a > 4)then
-				tr.transferItem(inside, ouside, 64, i)
-			else
-				if a > 4 then
-					it = true
-				end
-				ms[a]=true
-				if pdat ~= nil then
-					if pdat[i].name ~= dat[i].name or pdat[i].damage ~= dat[i].damage then
-						b = true
-					end
-				else 
-					b = true
-				end
-			end
-		end
+while true do 
+computer.pullSignal(0.7)
+if prcd ~= 0 then
+	a = typ(mn.getStackInSlot(mi, 2))
+	if a ~= 17 then
+		prcd = prcd - mn.transferItem(mi, its, nil, 2)
 	end
-	if c then
-		c = false
-		return
-	end
-	if it == false then 
-		return
-	end
-	pdat = dat
-	for i=1, #rec do
-		if ms[rec[i][1]] and ms[rec[i][2]] and ms[rec[i][3]] then
-			tecrec = i
-			if b then
-				computer.pullSignal(0.5)
-			else
-				state = 2
-			end
-			return
-		end
-	end
-	if b then
-		computer.pullSignal(3)
-	else
-		c = true
+	if prcd < 0 then 
+		prcd = 0
 	end
 end
+	rec()
+
+end 
+
+
 while true do
 computer.pullSignal(0)
 if state == 1 then 
