@@ -134,10 +134,11 @@ computer.beep(900, 0.1)
 prcd=-1 -- кол-во в процессе
 tcprs = 17 --текущий пресс
 tecrec = 0 -- текущий рецепт
+ppres = 0
 prms = {} -- предыдущий состав предметов
 function proc()
 	dat = mn.getAllStacks(is).getAll()
-	ms = {[17]=1} -- что:где
+	ms = {[17]=1, [ppres]=1} -- что:где
 	chg = false -- изменилось ли
     for i, j in pairs(dat) do
         a = typ(j)
@@ -168,6 +169,7 @@ function proc()
 					a = typ(tp.getStackInSlot(0, 1))
                     if a ~= 17 and a ~= j[1] then
 						tra(0, tp, to, 1, mn, is, 1, nil)
+						ppres = 0
 					end
 					a = typ(bt.getStackInSlot(1, 1))
 					if a ~= 17 and a ~= j[1] then
@@ -176,6 +178,9 @@ function proc()
                 end
 				if j[1] ~= 17 then
 					tra(is, mn, 1, to, tp, 0, ms[j[1]], nil)
+					if j[1] > 0 and j[1] < 5 then
+						ppres = j[1]
+					end
 				end
 				if j[3] ~= 17 then
 					tra(is, mn, 0, bo, bt, 1, ms[j[3]], nil)
