@@ -131,7 +131,7 @@ if not (tp and mn and bt and its and mi and ss ~= is) then
 end
 computer.beep(900, 0.1)
 
-prcd=-1 -- кол-во в процессе
+prcd=false -- идет ли процесс
 tcprs = 17 --текущий пресс
 tecrec = 0 -- текущий рецепт
 ppres = 0
@@ -164,18 +164,16 @@ function proc()
 	prms = ms
     for i, j in pairs(rec) do
         if ms[j[1]] and ms[j[2]] and ms[j[3]] then
-            if tecrec == i or prcd == 0 then
-                if prcd == 0 then
-					a = typ(tp.getStackInSlot(0, 1))
-                    if a ~= 17 and a ~= j[1] then
-						tra(0, tp, to, 1, mn, is, 1, nil)
-						ppres = 0
-					end
-					a = typ(bt.getStackInSlot(1, 1))
-					if a ~= 17 and a ~= j[1] then
-						tra(1, bt, bo, 0, mn, is, 1, nil)
-					end
-                end
+            if not prcd then
+				a = typ(tp.getStackInSlot(0, 1))
+				if a ~= 17 and a ~= j[1] then
+					tra(0, tp, to, 1, mn, is, 1, nil)
+					ppres = 0
+				end
+				a = typ(bt.getStackInSlot(1, 1))
+				if a ~= 17 and a ~= j[1] then
+					tra(1, bt, bo, 0, mn, is, 1, nil)
+				end				
 				if j[1] ~= 17 then
 					tra(is, mn, 1, to, tp, 0, ms[j[1]], nil)
 					if j[1] > 0 and j[1] < 5 then
@@ -188,29 +186,40 @@ function proc()
 				if j[2] ~= 17 then
 					mn.transferItem(is, mi, 1, ms[j[2]], 1)
 				end
-				prcd = prcd + 1
+				prcd = true
 				tecrec = i
 				return
             end
         end
     end
-    if not chg then
+    if not chg and not prcd then
         computer.pullSignal(1)
     end
     
 end
 
+timm = 0
+tim = 5
+tima = 10
+while true do
 
-while true do 
-computer.pullSignal(0.7)
-if prcd ~= 0 then
+	if prcd then
+		computer.pullSignal(tim)
+	else 
+		computer.pullSignal(0.7)
+	end
 	a = typ(mn.getStackInSlot(mi, 2))
 	if a ~= 17 then
-		prcd = prcd - mn.transferItem(mi, its, nil, 2)
+		mn.transferItem(mi, its, nil, 2)
+		if tima - timm > 0.2 and prcd then
+		
+		tima = (tima - timm) / 2
+		tim = (tima - timm) / 2
+		end
+		prcd = false
+	elseif prcd then
+		timm = (tima - timm) / 2
+		tim = (tima - timm) / 2
 	end
-	if prcd < 0 then 
-		prcd = 0
-	end
-end
 	proc()
 end 
